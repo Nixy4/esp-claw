@@ -35,11 +35,10 @@ local function panel_if_name(panel_if)
 end
 
 local function draw_preview_frame(frame, lcd_w, lcd_h)
-    -- Keep display format handling outside display: convert once, then draw RGB565 data.
+    -- Convert once, then let display borrow the RGB565 frame without copying it into a Lua string.
     local rgb565 <close> = image.convert(frame, image.RGB565)
-    local info = rgb565:info()
-    display.begin_frame({ clear = true, r = 0, g = 0, b = 0 })
-    local draw_w, draw_h = display.draw_rgb565_fit(0, 0, info.width, info.height, lcd_w, lcd_h, rgb565:data())
+    display.begin_frame({ clear = true, color = "black" })
+    local draw_w, draw_h = display.draw_image(0, 0, rgb565, { mode = "fit", width = lcd_w, height = lcd_h })
     display.present()
     display.end_frame()
     return draw_w, draw_h
@@ -64,7 +63,7 @@ if not ok then
 end
 display_started = true
 
-open_format = { format = "JPEG", width = 320, height = 240}
+open_format = { format = "JPEG", width = 320, height = 240, nearest = true }
 ok, err = pcall(camera.open, camera_paths.dev_path, open_format)
 if not ok then
     print(TAG .. " ERROR: camera.open failed: " .. tostring(err))
@@ -75,8 +74,8 @@ camera_started = true
 
 local run_ok, run_err = xpcall(function()
     local stream = camera.info()
-    local lcd_w = display.width()
-    local lcd_h = display.height()
+    local lcd_w = display.width
+    local lcd_h = display.height
     local frames = 0
 
     print(string.format("%s start camera=%dx%d format=%s lcd=%dx%d panel_if=%s",

@@ -36,8 +36,11 @@ The same captured raw frame can be displayed and analyzed before it is released:
 ```lua
 local frame = camera.get_frame(3000)
 local rgb565 <close> = image.convert(frame, image.RGB565)
-local info = rgb565:info()
-display.draw_rgb565_fit(0, 0, info.width, info.height, display.width(), display.height(), rgb565:data())
+display.draw_image(0, 0, rgb565, {
+    mode = "fit",
+    width = display.width,
+    height = display.height,
+})
 local result = motion.detect(frame, { stride = 8, pixel_threshold = 0.04, moving_threshold = 0.03 })
 frame:release()
 ```
@@ -45,7 +48,7 @@ frame:release()
 ## Notes
 
 - Supported source frame formats for motion: `RGB3`, `BGR3`, `GREY`, `Y800`, `RGBP`, `RGBR`, `YUYV`, `UYVY`, `JPEG`, and `MJPG`.
-- Display preview should convert the camera frame through `image.convert(frame, image.RGB565)` and pass the resulting RGB565 data to display.
+- Display preview should convert the camera frame through `image.convert(frame, image.RGB565)` and pass the RGB565 frame view to `display.draw_image()`. If the same source frame is also used for motion detection, `motion.detect(frame, opts)` can request GRAY8 and reuse the cached RGB565 path internally.
 - `pixel_threshold` is a per-sample gray-value ratio threshold in `[0, 1]`; `0.04` is about a 10-level gray difference.
 - `moving_threshold` is a moving sample ratio threshold in `[0, 1]`; `0.03` means more than 3% of sampled points must change.
 - Detection results include `moving_points`, `sample_points`, and `moving_ratio = moving_points / sample_points`.

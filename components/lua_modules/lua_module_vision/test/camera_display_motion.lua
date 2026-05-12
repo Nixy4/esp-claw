@@ -37,26 +37,22 @@ local function draw_result_overlay(frame_index, remaining_s, detect_result)
     local moving_ratio = detect_result.moving_ratio or 0
     local moved = detect_result.moved == true
     local status = moved and "MOTION" or (has_previous and "STILL" or "WARMUP")
-    local bg_r, bg_g, bg_b = 24, 24, 24
+    local bg = { r = 24, g = 24, b = 24 }
 
     if moved then
-        bg_r, bg_g, bg_b = 160, 24, 24
+        bg = { r = 160, g = 24, b = 24 }
     elseif has_previous then
-        bg_r, bg_g, bg_b = 24, 96, 48
+        bg = { r = 24, g = 96, b = 48 }
     end
 
     -- Draw an ASCII status bar after the camera preview so detection result is visible on screen.
-    display.fill_rect(0, 0, display.width(), 48, bg_r, bg_g, bg_b)
+    display.fill_rect(0, 0, display.width, 48, bg)
     display.draw_text(8, 6, string.format("motion: %s", status), {
-        r = 255,
-        g = 255,
-        b = 255,
+        color = "white",
         font_size = 16,
     })
     display.draw_text(8, 28, string.format("ratio=%.3f points=%d frame=%d left=%ds", moving_ratio, moving_points, frame_index, remaining_s), {
-        r = 255,
-        g = 255,
-        b = 255,
+        color = "white",
         font_size = 12,
     })
 end
@@ -103,7 +99,6 @@ local run_ok, run_err = xpcall(function()
         local remaining_s = deadline_s - now_s
         local frame <close> = camera.get_frame(CAPTURE_TIMEOUT_MS)
         local rgb565 <close> = image.convert(frame, image.RGB565)
-        local rgb_info = rgb565:info()
         local detect_result = motion.detect(frame, MOTION_OPTS)
 
         frames = frames + 1
@@ -111,8 +106,12 @@ local run_ok, run_err = xpcall(function()
             moved_frames = moved_frames + 1
         end
 
-        display.begin_frame({ clear = true, r = 0, g = 0, b = 0 })
-        display.draw_rgb565_fit(0, 0, rgb_info.width, rgb_info.height, display.width(), display.height(), rgb565:data())
+        display.begin_frame({ clear = true, color = "black" })
+        display.draw_image(0, 0, rgb565, {
+            mode = "fit",
+            width = display.width,
+            height = display.height,
+        })
         draw_result_overlay(frames, remaining_s, detect_result)
         display.present()
         display.end_frame()
@@ -127,11 +126,9 @@ local run_ok, run_err = xpcall(function()
         end
     end
 
-    display.begin_frame({ clear = true, r = 0, g = 0, b = 0 })
-    display.draw_text_aligned(0, 0, display.width(), display.height(), string.format("Motion test done\nframes=%d moved=%d", frames, moved_frames), {
-        r = 255,
-        g = 255,
-        b = 255,
+    display.begin_frame({ clear = true, color = "black" })
+    display.draw_text_aligned(0, 0, display.width, display.height, string.format("Motion test done\nframes=%d moved=%d", frames, moved_frames), {
+        color = "white",
         font_size = 20,
         align = "center",
         valign = "middle",
