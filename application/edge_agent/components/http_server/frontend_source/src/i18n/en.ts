@@ -39,6 +39,10 @@ export const en = {
   webimUploaded: 'Image uploaded — click Send to post.',
   webimSendShortcut: 'Ctrl+Enter to send',
   webimWsReconnecting: 'Live channel reconnecting…',
+  webimMarkdownPreview: 'Markdown preview',
+  webimMarkdownPreviewLoading: 'Loading Markdown…',
+  webimMarkdownPreviewLoadFailed: 'Could not load Markdown preview libraries.',
+  webimRetrySend: 'Retry sending',
 
   unsavedIndicator: 'Unsaved',
   unsavedConfirmLeave:

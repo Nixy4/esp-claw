@@ -4,6 +4,7 @@ type SwitchProps = {
   checked: boolean;
   onChange?: (checked: boolean) => void;
   label?: string;
+  labelClass?: string;
   hint?: string;
   disabled?: boolean;
   class?: string;
@@ -43,7 +44,11 @@ export const Switch: Component<SwitchProps> = (props) => {
         />
       </span>
       <span class="flex flex-col">
-        {props.label && <span class="text-[var(--color-text-primary)] text-[0.82rem]">{props.label}</span>}
+        {props.label && (
+          <span class={[props.labelClass ?? 'text-[var(--color-text-primary)]', 'text-[0.82rem]'].join(' ')}>
+            {props.label}
+          </span>
+        )}
         {props.hint && <span class="text-[0.7rem] text-[var(--color-text-muted)]">{props.hint}</span>}
       </span>
     </label>
