@@ -1,5 +1,0 @@
-version: 1.0.0
-# lilygo_device_driver owns the T-Display-P4 LDO, XL9535, panel and backlight
-# bring-up, so the board manager does not need standalone peripherals here.
-
-peripherals: []
