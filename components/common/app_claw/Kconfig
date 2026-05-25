@@ -393,13 +393,6 @@ menu "App Claw Config"
                 keep app_claw's direct dependency on lua_module_sci when Lua
                 capability is enabled.
 
-        config APP_CLAW_LUA_MODULE_SSD1306
-            bool "Enable SSD1306 Lua module"
-            default y
-            help
-                Enable the SSD1306 Lua module and keep app_claw's direct
-                dependency on lua_module_ssd1306 when Lua capability is enabled.
-
         config APP_CLAW_LUA_MODULE_STORAGE
             bool "Enable storage Lua module"
             default y
