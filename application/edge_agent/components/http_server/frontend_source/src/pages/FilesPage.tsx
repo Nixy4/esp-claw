@@ -1,8 +1,4 @@
-import {
-  HardDriveDownload,
-  Trash2,
-  X,
-} from 'lucide-solid';
+import { HardDriveDownload, Trash2, X } from 'lucide-solid';
 import { createEffect, createSignal, For, onCleanup, Show, type Component } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { t, tf } from '../i18n';
@@ -258,11 +254,17 @@ export const FilesPage: Component = () => {
       controller,
     });
     try {
-      const blob = await downloadFolderTar(entry.path, (done, total) => {
-        setFolderDownload((prev) =>
-          prev?.path === entry.path ? { ...prev, progress: Math.round((done / total) * 100) } : prev,
-        );
-      }, controller.signal);
+      const blob = await downloadFolderTar(
+        entry.path,
+        (done, total) => {
+          setFolderDownload((prev) =>
+            prev?.path === entry.path
+              ? { ...prev, progress: Math.round((done / total) * 100) }
+              : prev,
+          );
+        },
+        controller.signal,
+      );
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -335,12 +337,7 @@ export const FilesPage: Component = () => {
         title={t('navFiles') as string}
         actions={
           <div class="flex items-center gap-2 flex-wrap">
-            <Button
-              size="sm"
-              variant="secondary"
-              active={devMode()}
-              onClick={toggleDevMode}
-            >
+            <Button size="sm" variant="secondary" active={devMode()} onClick={toggleDevMode}>
               {devMode() ? t('fileDevModeOn') : t('fileDevMode')}
             </Button>
             <Button size="sm" variant="secondary" onClick={loadList} disabled={loading()}>
@@ -416,10 +413,18 @@ export const FilesPage: Component = () => {
           <table class="w-full">
             <thead>
               <tr class="bg-[var(--color-bg-card)]">
-                <th class="text-left px-4 py-2.5 text-[0.72rem] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">{t('fileColName')}</th>
-                <th class="text-left px-4 py-2.5 text-[0.72rem] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">{t('fileColType')}</th>
-                <th class="text-left px-4 py-2.5 text-[0.72rem] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">{t('fileColSize')}</th>
-                <th class="text-left px-4 py-2.5 text-[0.72rem] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">{t('fileColActions')}</th>
+                <th class="text-left px-4 py-2.5 text-[0.72rem] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  {t('fileColName')}
+                </th>
+                <th class="text-left px-4 py-2.5 text-[0.72rem] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  {t('fileColType')}
+                </th>
+                <th class="text-left px-4 py-2.5 text-[0.72rem] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  {t('fileColSize')}
+                </th>
+                <th class="text-left px-4 py-2.5 text-[0.72rem] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  {t('fileColActions')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -455,7 +460,10 @@ export const FilesPage: Component = () => {
                         {entry.is_dir ? '—' : humanSize(entry.size ?? 0)}
                       </td>
                       <td class="px-4 py-2.5">
-                        <div class="flex flex-wrap items-center gap-1.5" onClick={(event) => event.stopPropagation()}>
+                        <div
+                          class="flex flex-wrap items-center gap-1.5"
+                          onClick={(event) => event.stopPropagation()}
+                        >
                           <Show
                             when={entry.is_dir}
                             fallback={
@@ -506,9 +514,7 @@ export const FilesPage: Component = () => {
       <FileEditorModal
         state={editor}
         onClose={closeEditor}
-        onContentChange={(value) =>
-          setEditor((prev) => ({ ...prev, content: value }))
-        }
+        onContentChange={(value) => setEditor((prev) => ({ ...prev, content: value }))}
         onReload={reloadEditor}
         onSave={saveEditor}
       />
@@ -585,14 +591,28 @@ const FileEditorModal: Component<{
       open={props.state().open}
       onClose={props.onClose}
       title={t('fileEditorTitle') as string}
-      subtitle={<code class="font-mono text-[0.8rem] text-[var(--color-text-muted)]">{props.state().path}</code>}
+      subtitle={
+        <code class="font-mono text-[0.8rem] text-[var(--color-text-muted)]">
+          {props.state().path}
+        </code>
+      }
       actions={
         <>
-          <Button size="sm" variant="secondary" onClick={props.onReload} disabled={props.state().loading}>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={props.onReload}
+            disabled={props.state().loading}
+          >
             {t('fileEditorRefresh')}
           </Button>
           <Show when={!props.state().readOnly}>
-            <Button size="sm" variant="primary" onClick={props.onSave} disabled={props.state().saving}>
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={props.onSave}
+              disabled={props.state().saving}
+            >
               {props.state().saving ? '…' : t('fileEditorSave')}
             </Button>
           </Show>

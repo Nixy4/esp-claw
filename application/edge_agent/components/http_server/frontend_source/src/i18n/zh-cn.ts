@@ -198,8 +198,7 @@ export const zhCn: Dict = {
   capabilityNoResult: '没有匹配当前筛选条件的 capability。',
 
   sectionLuaModules: 'Lua 模块',
-  luaModulesDescription:
-    '选择 cap_lua 启动时要注册哪些已编译的 Lua 模块。修改后需重启生效。',
+  luaModulesDescription: '选择 cap_lua 启动时要注册哪些已编译的 Lua 模块。修改后需重启生效。',
   luaModulesSearchPlaceholder: '搜索模块…',
   luaModulesSummary: '已启用 {enabled} / 共 {total}',
   luaModulesSelectAll: '全选',
