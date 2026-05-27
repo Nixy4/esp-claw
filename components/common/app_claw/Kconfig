@@ -246,6 +246,13 @@ menu "App Claw Config"
                 Enable the button Lua module and keep app_claw's direct dependency
                 on lua_module_button when Lua capability is enabled.
 
+        config APP_CLAW_LUA_MODULE_BLE
+            bool "Enable BLE Lua module"
+            default y
+            depends on APP_CLAW_CAP_LUA
+            help
+                Enable the generic BLE Lua module.
+
         config APP_CLAW_LUA_MODULE_BLE_HID
             bool "Enable BLE HID Lua module"
             default y
