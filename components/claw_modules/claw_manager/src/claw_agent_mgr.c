@@ -25,6 +25,49 @@ static const char *TAG = "claw_agent_mgr";
 #define CLAW_AGENT_MGR_MAX_AGENTS        (1 + CONFIG_CLAW_AGENT_MGR_MAX_SUBAGENTS)
 #define CLAW_AGENT_MGR_NOTIFY_TEXT_SIZE  768
 
+static const char *CLAW_AGENT_MGR_DEFAULT_SUBAGENT_SYSTEM_PROMPT =
+    "You are a subagent spawned by the root agent. Work only on the delegated task "
+    "and keep your scope narrow. Do not manage, spawn, close, or inspect other agents. "
+    "Use the tools available to you when needed, then report concise findings, decisions, "
+    "and any blockers back to the root agent.";
+
+static const char *CLAW_AGENT_MGR_SUBAGENT_PROMPT_STACK_FMT =
+    "%s\n\n# Subagent Role\n%s\n\n# Subagent Type\n%s\n\nSelected agent_type: %s";
+
+static const claw_agent_mgr_subagent_type_prompt_t s_default_subagent_type_prompts[] = {
+    {
+        .agent_type = "subagent",
+        .system_prompt = "Agent type: subagent. Follow the parent agent's prompt as the task definition "
+                         "and return the useful result.",
+    },
+    {
+        .agent_type = "research",
+        .system_prompt = "Agent type: research. Prioritize investigation, source/context gathering, "
+                         "and concise synthesis. Do not make code changes unless the delegated task "
+                         "explicitly asks for them.",
+    },
+    {
+        .agent_type = "coding",
+        .system_prompt = "Agent type: coding. Prioritize implementation details, affected files, "
+                         "focused fixes, and verification. Keep changes scoped to the delegated task.",
+    },
+    {
+        .agent_type = "worker",
+        .system_prompt = "Agent type: coding. Prioritize implementation details, affected files, "
+                         "focused fixes, and verification. Keep changes scoped to the delegated task.",
+    },
+    {
+        .agent_type = "debug",
+        .system_prompt = "Agent type: debug. Prioritize reproducing symptoms, isolating root cause, "
+                         "and proposing the smallest defensible fix with verification steps.",
+    },
+    {
+        .agent_type = "debugger",
+        .system_prompt = "Agent type: debug. Prioritize reproducing symptoms, isolating root cause, "
+                         "and proposing the smallest defensible fix with verification steps.",
+    },
+};
+
 typedef enum {
     CLAW_AGENT_MGR_ROLE_ROOT = 0,
     CLAW_AGENT_MGR_ROLE_SUBAGENT,
@@ -61,6 +104,9 @@ typedef struct {
     char *auth_type;
     char *max_tokens_field;
     char *system_prompt;
+    char *subagent_system_prompt;
+    claw_agent_mgr_subagent_type_prompt_t *subagent_type_prompts;
+    size_t subagent_type_prompt_count;
     claw_core_context_provider_t base_providers[CLAW_AGENT_MGR_MAX_BASE_PROVIDERS];
     size_t base_provider_count;
     uint32_t next_instance_id;
@@ -88,6 +134,112 @@ static char *claw_agent_mgr_strdup(const char *src)
     }
     memcpy(copy, src, len);
     return copy;
+}
+
+static void claw_agent_mgr_free_prompt_config(void)
+{
+    if (s_mgr.subagent_type_prompts) {
+        for (size_t i = 0; i < s_mgr.subagent_type_prompt_count; i++) {
+            free((char *)s_mgr.subagent_type_prompts[i].agent_type);
+            free((char *)s_mgr.subagent_type_prompts[i].system_prompt);
+        }
+        free(s_mgr.subagent_type_prompts);
+    }
+    s_mgr.subagent_type_prompts = NULL;
+    s_mgr.subagent_type_prompt_count = 0;
+    free(s_mgr.subagent_system_prompt);
+    s_mgr.subagent_system_prompt = NULL;
+}
+
+static void claw_agent_mgr_free_config_storage(void)
+{
+    free(s_mgr.api_key);
+    free(s_mgr.backend_type);
+    free(s_mgr.model);
+    free(s_mgr.base_url);
+    free(s_mgr.auth_type);
+    free(s_mgr.max_tokens_field);
+    free(s_mgr.system_prompt);
+    s_mgr.api_key = NULL;
+    s_mgr.backend_type = NULL;
+    s_mgr.model = NULL;
+    s_mgr.base_url = NULL;
+    s_mgr.auth_type = NULL;
+    s_mgr.max_tokens_field = NULL;
+    s_mgr.system_prompt = NULL;
+    claw_agent_mgr_free_prompt_config();
+}
+
+static const char *claw_agent_mgr_find_subagent_type_prompt(const char *agent_type)
+{
+    const char *type_name = (agent_type && agent_type[0]) ? agent_type : "subagent";
+
+    for (size_t i = 0; i < s_mgr.subagent_type_prompt_count; i++) {
+        if (s_mgr.subagent_type_prompts[i].agent_type &&
+                strcmp(s_mgr.subagent_type_prompts[i].agent_type, type_name) == 0) {
+            return s_mgr.subagent_type_prompts[i].system_prompt;
+        }
+    }
+    for (size_t i = 0; i < sizeof(s_default_subagent_type_prompts) /
+            sizeof(s_default_subagent_type_prompts[0]); i++) {
+        if (strcmp(s_default_subagent_type_prompts[i].agent_type, type_name) == 0) {
+            return s_default_subagent_type_prompts[i].system_prompt;
+        }
+    }
+
+    return s_default_subagent_type_prompts[0].system_prompt;
+}
+
+static char *claw_agent_mgr_format_prompt_stack(const char *base_prompt,
+                                                const char *role_prompt,
+                                                const char *type_prompt,
+                                                const char *agent_type)
+{
+    const char *type_name = (agent_type && agent_type[0]) ? agent_type : "subagent";
+    int needed;
+    char *prompt = NULL;
+
+    if (!base_prompt || !role_prompt || !type_prompt) {
+        return NULL;
+    }
+
+    needed = snprintf(NULL,
+                      0,
+                      CLAW_AGENT_MGR_SUBAGENT_PROMPT_STACK_FMT,
+                      base_prompt,
+                      role_prompt,
+                      type_prompt,
+                      type_name);
+    if (needed < 0) {
+        return NULL;
+    }
+    prompt = malloc((size_t)needed + 1U);
+    if (!prompt) {
+        return NULL;
+    }
+    if (snprintf(prompt,
+                 (size_t)needed + 1U,
+                 CLAW_AGENT_MGR_SUBAGENT_PROMPT_STACK_FMT,
+                 base_prompt,
+                 role_prompt,
+                 type_prompt,
+                 type_name) < 0) {
+        free(prompt);
+        return NULL;
+    }
+
+    return prompt;
+}
+
+static char *claw_agent_mgr_build_subagent_system_prompt(const claw_agent_mgr_agent_t *agent)
+{
+    if (!agent) {
+        return NULL;
+    }
+    return claw_agent_mgr_format_prompt_stack(s_mgr.system_prompt,
+                                             s_mgr.subagent_system_prompt,
+                                             claw_agent_mgr_find_subagent_type_prompt(agent->agent_type),
+                                             agent->agent_type);
 }
 
 static void claw_agent_mgr_lock(void)
@@ -164,8 +316,55 @@ static esp_err_t claw_agent_mgr_copy_core_config(const claw_core_config_t *confi
     return ESP_OK;
 }
 
+static esp_err_t claw_agent_mgr_copy_prompt_config(const claw_agent_mgr_config_t *config)
+{
+    if (!config) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (config->subagent_type_prompt_count > 0 && !config->subagent_type_prompts) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    s_mgr.subagent_system_prompt = claw_agent_mgr_strdup(
+                                       config->subagent_system_prompt ?
+                                       config->subagent_system_prompt :
+                                       CLAW_AGENT_MGR_DEFAULT_SUBAGENT_SYSTEM_PROMPT);
+    if (!s_mgr.subagent_system_prompt) {
+        return ESP_ERR_NO_MEM;
+    }
+
+    if (config->subagent_type_prompt_count == 0) {
+        return ESP_OK;
+    }
+
+    s_mgr.subagent_type_prompts = calloc(config->subagent_type_prompt_count,
+                                         sizeof(s_mgr.subagent_type_prompts[0]));
+    if (!s_mgr.subagent_type_prompts) {
+        return ESP_ERR_NO_MEM;
+    }
+    s_mgr.subagent_type_prompt_count = config->subagent_type_prompt_count;
+    for (size_t i = 0; i < config->subagent_type_prompt_count; i++) {
+        const claw_agent_mgr_subagent_type_prompt_t *src = &config->subagent_type_prompts[i];
+
+        if (!src->agent_type || !src->agent_type[0] ||
+                !src->system_prompt || !src->system_prompt[0]) {
+            return ESP_ERR_INVALID_ARG;
+        }
+        s_mgr.subagent_type_prompts[i].agent_type = claw_agent_mgr_strdup(src->agent_type);
+        s_mgr.subagent_type_prompts[i].system_prompt = claw_agent_mgr_strdup(src->system_prompt);
+        if (!s_mgr.subagent_type_prompts[i].agent_type ||
+                !s_mgr.subagent_type_prompts[i].system_prompt) {
+            return ESP_ERR_NO_MEM;
+        }
+    }
+
+    return ESP_OK;
+}
+
 esp_err_t claw_agent_mgr_init(const claw_agent_mgr_config_t *config)
 {
+    esp_err_t err;
+
     if (!config || !config->core_config) {
         return ESP_ERR_INVALID_ARG;
     }
@@ -182,8 +381,14 @@ esp_err_t claw_agent_mgr_init(const claw_agent_mgr_config_t *config)
     if (!s_mgr.mutex) {
         return ESP_ERR_NO_MEM;
     }
-    ESP_RETURN_ON_ERROR(claw_agent_mgr_copy_core_config(config->core_config),
-                        TAG, "copy core config");
+    err = claw_agent_mgr_copy_core_config(config->core_config);
+    if (err != ESP_OK) {
+        goto fail;
+    }
+    err = claw_agent_mgr_copy_prompt_config(config);
+    if (err != ESP_OK) {
+        goto fail;
+    }
     for (size_t i = 0; i < config->base_context_provider_count; i++) {
         s_mgr.base_providers[i] = config->base_context_providers[i];
     }
@@ -192,6 +397,14 @@ esp_err_t claw_agent_mgr_init(const claw_agent_mgr_config_t *config)
     s_mgr.next_request_id = 1;
     s_mgr.initialized = true;
     return ESP_OK;
+
+fail:
+    claw_agent_mgr_free_config_storage();
+    if (s_mgr.mutex) {
+        vSemaphoreDelete(s_mgr.mutex);
+    }
+    memset(&s_mgr, 0, sizeof(s_mgr));
+    return err;
 }
 
 static void claw_agent_mgr_fill_core_config(claw_agent_mgr_agent_t *agent,
@@ -206,6 +419,7 @@ static void claw_agent_mgr_fill_core_config(claw_agent_mgr_agent_t *agent,
 static esp_err_t claw_agent_mgr_start_agent_core(claw_agent_mgr_agent_t *agent)
 {
     claw_core_config_t core_config = {0};
+    char *subagent_system_prompt = NULL;
     esp_err_t ret;
 
     if (!agent) {
@@ -216,12 +430,22 @@ static esp_err_t claw_agent_mgr_start_agent_core(claw_agent_mgr_agent_t *agent)
     }
 
     claw_agent_mgr_fill_core_config(agent, &core_config);
+    if (agent->role == CLAW_AGENT_MGR_ROLE_SUBAGENT) {
+        subagent_system_prompt = claw_agent_mgr_build_subagent_system_prompt(agent);
+        if (!subagent_system_prompt) {
+            snprintf(agent->last_error, sizeof(agent->last_error), "%s", esp_err_to_name(ESP_ERR_NO_MEM));
+            return ESP_ERR_NO_MEM;
+        }
+        core_config.system_prompt = subagent_system_prompt;
+    }
     agent->cap_user_ctx.magic = CLAW_CAP_CORE_CALL_USER_CTX_MAGIC;
     agent->cap_user_ctx.core = &agent->core;
     agent->cap_user_ctx.caller = agent->role == CLAW_AGENT_MGR_ROLE_ROOT ?
                                  CLAW_CAP_CALLER_ROOT_AGENT : CLAW_CAP_CALLER_SUB_AGENT;
 
     ret = claw_core_create(&core_config, &agent->core);
+    free(subagent_system_prompt);
+    subagent_system_prompt = NULL;
     if (ret != ESP_OK) {
         snprintf(agent->last_error, sizeof(agent->last_error), "%s", esp_err_to_name(ret));
         return ret;

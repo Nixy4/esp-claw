@@ -69,6 +69,7 @@ static bool s_backend_registered;
 static bool s_runtime_ready;
 static size_t s_backend_call_count;
 static char *s_captured_messages[TEST_CAPTURE_MAX];
+static char *s_captured_system_prompts[TEST_CAPTURE_MAX];
 static size_t s_capture_count;
 static test_record_t s_records[TEST_RECORD_MAX];
 static size_t s_record_count;
@@ -147,6 +148,8 @@ static void test_clear_captures(void)
     for (size_t i = 0; i < s_capture_count; i++) {
         free(s_captured_messages[i]);
         s_captured_messages[i] = NULL;
+        free(s_captured_system_prompts[i]);
+        s_captured_system_prompts[i] = NULL;
     }
     s_capture_count = 0;
     s_backend_call_count = 0;
@@ -167,6 +170,7 @@ static void test_clear_records(void)
 static void test_capture_messages(const claw_llm_chat_request_t *request)
 {
     char *messages_json = NULL;
+    char *system_prompt = NULL;
 
     if (!request) {
         return;
@@ -175,16 +179,24 @@ static void test_capture_messages(const claw_llm_chat_request_t *request)
     if (!messages_json) {
         return;
     }
+    system_prompt = test_strdup(request->system_prompt ? request->system_prompt : "");
+    if (!system_prompt) {
+        free(messages_json);
+        return;
+    }
     if (!test_lock_for(TEST_WAIT_MS)) {
+        free(system_prompt);
         free(messages_json);
         return;
     }
     if (s_capture_count >= TEST_CAPTURE_MAX) {
         test_unlock();
+        free(system_prompt);
         free(messages_json);
         return;
     }
     s_captured_messages[s_capture_count] = messages_json;
+    s_captured_system_prompts[s_capture_count] = system_prompt;
     s_capture_count++;
     test_unlock();
 }
@@ -197,6 +209,22 @@ static bool test_capture_contains_text(const char *text)
     for (size_t i = 0; i < s_capture_count; i++) {
         if (s_captured_messages[i] &&
                 strstr(s_captured_messages[i], text)) {
+            found = true;
+            break;
+        }
+    }
+    test_unlock();
+    return found;
+}
+
+static bool test_system_capture_contains_text(const char *text)
+{
+    bool found = false;
+
+    test_lock();
+    for (size_t i = 0; i < s_capture_count; i++) {
+        if (s_captured_system_prompts[i] &&
+                strstr(s_captured_system_prompts[i], text)) {
             found = true;
             break;
         }
@@ -999,6 +1027,8 @@ TEST_CASE("root text submit returns response through manager facade",
     TEST_ASSERT_NOT_NULL(response.text);
     TEST_ASSERT_NOT_NULL(strstr(response.text, "final:agent-mgr-test"));
     wait_for_record_text("chat:root:facade", CLAW_CORE_CONTEXT_RECORD_USER, "root hello");
+    TEST_ASSERT_TRUE(test_system_capture_contains_text("test root system prompt"));
+    TEST_ASSERT_FALSE(test_system_capture_contains_text("# Subagent Role"));
     claw_core_response_free(&response);
 }
 
@@ -1022,6 +1052,10 @@ TEST_CASE("spawn send inspect and close subagent through root-only capability",
     TEST_ASSERT_EQUAL_STRING("chat:runtime:parent:subagent_01", agent_id);
 
     wait_for_record_text(agent_id, CLAW_CORE_CONTEXT_RECORD_USER, "child initial task");
+    TEST_ASSERT_TRUE(test_system_capture_contains_text("test root system prompt"));
+    TEST_ASSERT_TRUE(test_system_capture_contains_text("# Subagent Role"));
+    TEST_ASSERT_TRUE(test_system_capture_contains_text("Agent type: research."));
+    TEST_ASSERT_TRUE(test_system_capture_contains_text("Selected agent_type: research"));
     TEST_ASSERT_EQUAL(ESP_OK, claw_agent_mgr_inspect_agent(&ctx, agent_id, &info));
     TEST_ASSERT_EQUAL_STRING(agent_id, info.agent_id);
     TEST_ASSERT_EQUAL_STRING(agent_id, info.session_id);

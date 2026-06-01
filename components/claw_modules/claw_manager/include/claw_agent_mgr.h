@@ -30,9 +30,17 @@ typedef enum {
 } claw_agent_mgr_status_t;
 
 typedef struct {
+    const char *agent_type;
+    const char *system_prompt;
+} claw_agent_mgr_subagent_type_prompt_t;
+
+typedef struct {
     const claw_core_config_t *core_config;
     const claw_core_context_provider_t *base_context_providers;
     size_t base_context_provider_count;
+    const char *subagent_system_prompt; /* optional role overlay appended to core_config->system_prompt */
+    const claw_agent_mgr_subagent_type_prompt_t *subagent_type_prompts;
+    size_t subagent_type_prompt_count;
 } claw_agent_mgr_config_t;
 
 typedef struct {
