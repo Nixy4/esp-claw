@@ -21,7 +21,7 @@ export const zhCn: Dict = {
   navBasic: '基本设置',
   navLlm: 'LLM 设置',
   navIm: 'IM 设置',
-  navSearch: '网络搜索设置',
+  navWebReq: '网络和搜索设置',
   navMemory: '记忆管理',
   navCapabilities: 'Capabilities 管理',
   navLuaModules: 'Lua 模块管理',
@@ -170,13 +170,16 @@ export const zhCn: Dict = {
   wechatLoginNote: '用微信扫描二维码。扫码后凭据将自动填入下方高级设置，请点击保存持久化。',
   wechatLoginOpenLink: '打开登录链接',
 
-  sectionSearch: '搜索（可选）',
-  searchNote:
-    '如填写，ESP-Claw 可在运行中检索在线资源。提示：系统自带的天气 Skill 也依赖在线搜索功能。',
-  searchBraveKey: 'Brave Search API Key',
-  searchTavilyKey: 'Tavily API Key',
-  searchHttpAllowlist: 'HTTP 白名单（域名/IP，逗号分隔）',
-  searchHttpAllowlistPlaceholder: 'api.example.com,*.example.org,203.0.113.10',
+  sectionWebReqSearch: '搜索',
+  webreqSearchNote:
+    '可选。如填写，ESP-Claw 可在运行中检索在线资源。',
+  sectionWebReqNetwork: '网络请求',
+  webreqBraveKey: 'Brave Search API Key',
+  webreqTavilyKey: 'Tavily API Key',
+  webreqHttpAllowlist: 'HTTP 白名单（域名/IP，逗号分隔）',
+  webreqHttpAllowlistPlaceholder: 'api.example.com,*.example.org,203.0.113.10',
+  webreqHttpAllowlistNote:
+    '使用逗号分隔的域名/IP，支持通配符*，单独*表示允许全部域名/IP',
 
   sectionCapabilities: 'Capability Group',
   capabilitiesDescription:

@@ -18,8 +18,8 @@ const StatusPage = lazy(() =>
 const BasicPage = lazy(() =>
   import('./pages/BasicPage').then((mod) => ({ default: mod.BasicPage })),
 );
-const SearchPage = lazy(() =>
-  import('./pages/SearchPage').then((mod) => ({ default: mod.SearchPage })),
+const WebReqPage = lazy(() =>
+  import('./pages/WebReqPage').then((mod) => ({ default: mod.WebReqPage })),
 );
 const MemoryPage = lazy(() =>
   import('./pages/MemoryPage').then((mod) => ({ default: mod.MemoryPage })),
@@ -50,6 +50,7 @@ type RestartRequestOptions = {
 
 function readTabFromHash(): RouteId {
   const hash = window.location.hash.replace(/^#\/?/, '');
+  if (hash === 'search') return 'webreq';
   if (hash === 'start') return 'start';
   return LEAF_IDS.includes(hash as TabId) ? (hash as TabId) : 'status';
 }
@@ -248,8 +249,8 @@ const App: Component = () => {
               <Show when={currentTab() === 'im'}>
                 <ImPage />
               </Show>
-              <Show when={currentTab() === 'search'}>
-                <SearchPage
+              <Show when={currentTab() === 'webreq'}>
+                <WebReqPage
                   onRestartRequest={() => void handleRestartRequest({ reloadOnSuccess: true })}
                 />
               </Show>

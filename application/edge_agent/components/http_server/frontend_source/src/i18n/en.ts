@@ -19,7 +19,7 @@ export const en = {
   navBasic: 'Basic Settings',
   navLlm: 'LLM',
   navIm: 'IM',
-  navSearch: 'Web Search',
+  navWebReq: 'Network & Search Config',
   navMemory: 'Memory',
   navCapabilities: 'Capabilities',
   navLuaModules: 'Lua Modules',
@@ -175,13 +175,16 @@ export const en = {
     'Scan the QR code with WeChat. Credentials will be filled in Advanced settings below — click Save to store them.',
   wechatLoginOpenLink: 'Open login link',
 
-  sectionSearch: 'Search (Optional)',
-  searchNote:
-    'If set, ESP-Claw can search online. Tip: Built-in weather skill also relies on online search.',
-  searchBraveKey: 'Brave Search API Key',
-  searchTavilyKey: 'Tavily API Key',
-  searchHttpAllowlist: 'HTTP allowlist (domains/IP, comma-separated)',
-  searchHttpAllowlistPlaceholder: 'api.example.com,*.example.org,203.0.113.10',
+  sectionWebReqSearch: 'Search',
+  webreqSearchNote:
+    'Optional. If set, ESP-Claw can search online.',
+  sectionWebReqNetwork: 'Network Requests',
+  webreqBraveKey: 'Brave Search API Key',
+  webreqTavilyKey: 'Tavily API Key',
+  webreqHttpAllowlist: 'HTTP allowlist (domains/IP, comma-separated)',
+  webreqHttpAllowlistPlaceholder: 'api.example.com,*.example.org,203.0.113.10',
+  webreqHttpAllowlistNote:
+    'Use comma-separated domains/IPs. Wildcard * is supported, and a standalone * allows all domains/IPs.',
 
   sectionCapabilities: 'Capability Groups',
   capabilitiesDescription:

@@ -3,7 +3,8 @@ title: Capabilities 总览
 description: ESP-Claw 中 cap_* 模块的整体架构、分类与注册机制。
 ---
 
-import { LinkCard, CardGrid, Aside } from '@astrojs/starlight/components';
+import { CardGrid, Aside } from '@astrojs/starlight/components';
+import { LinkCard } from 'starlight-theme-nova/components'
 import LinkToSource from '@/components/LinkToSource.astro';
 
 ## 什么是 Capability
@@ -27,7 +28,7 @@ import LinkToSource from '@/components/LinkToSource.astro';
 | **IM 接入** | `cap_im_platform` | 飞书、QQ、Telegram、微信的统一 IM 组件，并注册 `cap_im_tg` 等按平台划分的运行时 Group |
 | **文件系统** | `cap_files` | 受管 FATFS 目录的读写、编辑、复制、移动、列举与删除 |
 | **Lua 脚本** | `cap_lua` | Lua 脚本的写入、同步/异步执行与任务管理 |
-| **Skill 管理** | `cap_skill` | Skill 的注册/注销与激活/停用（暴露 core 功能为工具） |
+| **Skill 管理** | `cap_skill` | Skill 的注册/注销与激活（暴露 core 功能为工具，激活时返回完整文档） |
 | **LLM 检视** | `cap_llm_inspect` | 将本地图像文件发送给 LLM 分析（与 LLM 产生嵌套交互） |
 | **HTTP 请求** | `cap_http_request` | 受 allowlist 保护的直接 HTTP / HTTPS 请求 |
 | **网络搜索** | `cap_web_search` | 调用外部搜索 API |
@@ -94,6 +95,10 @@ Capability 可通过以下三条路径被调用：
   <LinkCard title="cap_files" href="./cap-files" description="文件系统代表：受管目录的读写、编辑、复制、移动与删除能力" />
   <LinkCard title="cap_system" href="./cap-system" description="系统信息代表：读取设备运行状态并支持安全重启" />
   <LinkCard title="cap_scheduler" href="./cap-scheduler" description="定时调度代表：基于时间触发事件，管理周期性任务" />
+  <LinkCard title="cap_http_request" href="./cap-http-request" description="受 Allowlist 保护的 HTTP/HTTPS 请求" />
+  <LinkCard title="cap_web_search" href="./cap-web-search" description="调用外部搜索 API（Tavily / Brave）进行网络搜索" />
+  <LinkCard title="cap_router_mgr" href="./cap-router-mgr" description="动态维护 Event Router 自动化规则" />
+  <LinkCard title="cap_mcp_client / cap_mcp_server" href="./cap-mcp" description="MCP 协议客户端与服务端，支持多设备工具互调" />
   <LinkCard title="cap_lua 与 Lua 综述" href="./cap-lua" description="Lua 脚本能力与 Lua 在 ESP-Claw 中的整体定位" />
   <LinkCard title="Lua 扩展模块" href="./lua-modules" description="lua_module_* / lua_driver_* 的注册机制、实现方式与 display 模块分析" />
 </CardGrid>

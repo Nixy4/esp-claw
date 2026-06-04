@@ -34,7 +34,7 @@ type TabId =
   | 'basic'
   | 'llm'
   | 'im'
-  | 'search'
+  | 'webreq'
   | 'memory'
   | 'webim'
   | 'capabilities'
@@ -129,7 +129,7 @@ const PROVIDER_PRESETS: Record<ProviderKey, ProviderPreset> = {
     llm_default_image_max_bytes: '524288',
     llm_max_tokens_field: 'max_completion_tokens',
     llm_supports_tools: 'true',
-    llm_supports_vision: 'true',
+    llm_supports_vision: 'false',
     llm_image_remote_url_only: 'false',
     llm_model: 'deepseek-v4-pro',
   },
@@ -1091,7 +1091,7 @@ export const SetupWizardPage: Component<SetupWizardPageProps> = (props) => {
                       type="password"
                       label={
                         <>
-                          {t('searchTavilyKey')}
+                          {t('webreqTavilyKey')}
                           <LabelLink href={TAVILY_API_KEY_URL}>
                             {t('llmProviderConsole') as string} ↗
                           </LabelLink>
@@ -1103,8 +1103,8 @@ export const SetupWizardPage: Component<SetupWizardPageProps> = (props) => {
                       }
                     />
                     <TextInput
-                      label={t('searchHttpAllowlist')}
-                      placeholder={t('searchHttpAllowlistPlaceholder') as string}
+                      label={t('webreqHttpAllowlist')}
+                      placeholder={t('webreqHttpAllowlistPlaceholder') as string}
                       value={searchForm.search_http_allowlist}
                       onInput={(event) =>
                         setSearchForm('search_http_allowlist', event.currentTarget.value)

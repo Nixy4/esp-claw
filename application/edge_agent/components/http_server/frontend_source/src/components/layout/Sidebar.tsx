@@ -38,7 +38,7 @@ export type LeafNode = {
     | 'navBasic'
     | 'navLlm'
     | 'navIm'
-    | 'navSearch'
+    | 'navWebReq'
     | 'navMemory'
     | 'navCapabilities'
     | 'navLuaModules'
@@ -66,7 +66,7 @@ export const NAV_TREE: NavNode[] = [
       { kind: 'leaf', id: 'basic', labelKey: 'navBasic', icon: IconWifi },
       { kind: 'leaf', id: 'llm', labelKey: 'navLlm', icon: IconLlm },
       { kind: 'leaf', id: 'im', labelKey: 'navIm', icon: IconIm },
-      { kind: 'leaf', id: 'search', labelKey: 'navSearch', icon: IconSearch },
+      { kind: 'leaf', id: 'webreq', labelKey: 'navWebReq', icon: IconSearch },
     ],
   },
   { kind: 'leaf', id: 'memory', labelKey: 'navMemory', icon: IconMemory },

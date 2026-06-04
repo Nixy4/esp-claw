@@ -77,9 +77,11 @@ esp_err_t http_server_start(void)
     config.lru_purge_enable = true;
 
     uint32_t task_caps = MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT;
+#if CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM
     if (heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM) >= config.stack_size) {
         task_caps = MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT;
     }
+#endif
     config.task_caps = task_caps;
 
     config.close_fn = http_server_close_fn;

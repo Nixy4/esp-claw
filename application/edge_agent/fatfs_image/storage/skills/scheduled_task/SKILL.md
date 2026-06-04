@@ -108,7 +108,7 @@ Wake the agent every day at 17:09:
 Run a Lua script every 120 seconds:
 
 ```json
-{"path":"{CUR_SKILL_DIR}/scripts/add_scheduled_task.lua","args":{"task_id":"hello_world_timer","kind":"interval","interval_ms":120000,"mode":"run_script","text":"hello world timer","script_path":"/fatfs/scripts/hello_world.lua","script_args":{},"trigger_count":3},"timeout_ms":60000}
+{"path":"{CUR_SKILL_DIR}/scripts/add_scheduled_task.lua","args":{"task_id":"hello_world_timer","kind":"interval","interval_ms":120000,"mode":"run_script","text":"hello world timer","script_path":"/absolute/path/to/your_script.lua","script_args":{},"trigger_count":3},"timeout_ms":60000}
 ```
 
 ## Behavior

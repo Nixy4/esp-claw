@@ -67,7 +67,7 @@ const PROVIDER_PRESETS: Record<PresetKey, ProviderPreset> = {
     llm_max_tokens_field: 'max_completion_tokens',
     llm_default_image_max_bytes: '524288',
     llm_supports_tools: true,
-    llm_supports_vision: true,
+    llm_supports_vision: false,
     llm_image_remote_url_only: false,
     llm_model: 'deepseek-v4-pro',
     advanced: false,

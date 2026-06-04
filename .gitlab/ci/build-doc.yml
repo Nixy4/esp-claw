@@ -11,11 +11,10 @@ build_doc:
       artifacts: true
       optional: true
   script:
-    - apt update && apt install -y curl 
     - curl -fsSL https://d2lang.com/install.sh | sh -s --
-    - npm install -g pnpm
     - cd docs
-    - pnpm install
+    - corepack enable
+    - pnpm ci
     - pnpm run generate-firmware-json ../merged_binary
     - pnpm run build
   artifacts:

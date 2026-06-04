@@ -3,12 +3,15 @@ title: Web Flash
 description: Flash ESP-Claw firmware using the web flasher.
 ---
 
-import { LinkCard, Steps, Aside, LinkButton } from '@astrojs/starlight/components';
+import { Steps, Aside } from '@astrojs/starlight/components';
+import { LinkCard } from 'starlight-theme-nova/components'
+import { LinkButton } from 'starlight-theme-nova/components'
+import LinkToSource from '@/components/LinkToSource.astro';
 
 ## Prerequisites
 
 At this point, you should already have assembled the ESP-Claw breadboard hardware, or prepared other ESP-Claw compatible hardware.
-You can view the list of ESP-Claw compatible development boards in the [GitHub repository](https://github.com/espressif/esp-claw/tree/master/application/edge_agent/boards).
+You can view the list of ESP-Claw compatible development boards in <LinkToSource relativePath="application/edge_agent/boards/" />.
 ESP-Claw requires at least 8 MB Flash and 8 MB PSRAM, currently supports ESP32-S3 and ESP32-P4.
 
 Before flashing, prepare a computer with Chrome or Edge installed. Web flashing is not available in Firefox for now.

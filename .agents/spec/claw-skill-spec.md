@@ -24,7 +24,7 @@ Notes:
 - `skills/<skill_id>/` is one complete skill.
 - `SKILL.md` is the only required file.
 - `references/`, `scripts/`, `assets/`, and other subdirectories are optional.
-- The whole skill directory is packaged as one skill and copied unchanged into `skills/<skill_id>/` in the application file image.
+- The whole skill directory is packaged as one skill and copied unchanged into `skills/<skill_id>/` in the application SYSTEM file image.
 
 ## SKILL.md Rules
 
@@ -96,7 +96,7 @@ Sync rules:
 - Every `skills/<skill_id>/SKILL.md` must exist.
 - Every skill id must be unique across the whole project.
 - Every file in the skill directory belongs to that skill.
-- Every file in the skill directory is copied into `skills/<skill_id>/` in the FATFS image.
+- Every file in the skill directory is copied into `skills/<skill_id>/` in the SYSTEM FATFS image.
 - `references/`, `scripts/`, `assets/`, and other subdirectories keep their relative paths.
 - The build fails if two components provide the same `skills/<skill_id>/...` output path.
 - Old component skill files recorded in the build manifest are removed from the output directory when they no longer exist.
@@ -115,7 +115,7 @@ skills/light_switch/SKILL.md
 skills/light_switch/scripts/switch.lua
 ```
 
-The `skills/...` paths above are relative paths in the device filesystem or FATFS image, not source-tree paths.
+The `skills/...` paths above are relative paths inside the device SYSTEM filesystem image, not source-tree paths.
 
 ## `{CUR_SKILL_DIR}` Placeholder
 
@@ -130,18 +130,27 @@ Run `{CUR_SKILL_DIR}/scripts/action.lua` with `lua_run_script`.
 Rules:
 
 - `{CUR_SKILL_DIR}` is expanded only in the `SKILL.md` body, not in JSON frontmatter.
-- The expanded value points to the current skill directory in the device filesystem or FATFS image.
+- The expanded value points to the current skill directory in the device filesystem. Built-in skills usually expand under `/system/skills/<skill_id>`, while runtime-installed user skills expand under the DATA root's `skills/<skill_id>`.
 - Use `{CUR_SKILL_DIR}/scripts/...` when passing a script path from this skill to a tool.
 
 ## Filesystem Path Rules
 
-When the model reads files bundled with a skill, use filesystem-relative paths:
+File tool paths (`read_file`, `write_file`, ...) must be absolute. When the model
+reads files bundled with a skill, use the `{CUR_SKILL_DIR}` placeholder, which
+expands to the skill's absolute directory:
 
 - `read_file("{CUR_SKILL_DIR}/references/guide.md")`
 - `read_file("{CUR_SKILL_DIR}/scripts/action.lua")`
 - `read_file("{CUR_SKILL_DIR}/assets/name.ext")`
 
-Do not assume the source component directory name, and do not use `../` to move to a parent directory.
+Do not pass relative paths, do not assume the source component directory name, and do not use `../` to move to a parent directory.
+
+Path roots:
+
+- Built-in/component skills are staged into the read-only SYSTEM root (`/system/skills/...`).
+- Runtime-installed/user skills are stored under the writable DATA root (`<DATA>/skills/...`). DATA is `/fatfs` for flash storage, or the board-manager SD card mount point when SD storage is active.
+- Skill documents should use `{CUR_SKILL_DIR}` for bundled references, scripts, and assets. Do not hard-code `/fatfs/skills/...` for skill-local files.
+- Writable files created by Lua scripts should use `storage.get_root_dir()` and `storage.join_path(...)` instead of assuming `/fatfs`.
 
 ## Lua Skill Script Rules
 
