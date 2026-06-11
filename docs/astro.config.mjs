@@ -5,7 +5,6 @@ import { fileURLToPath } from "url";
 
 import starlightThemeNova from "starlight-theme-nova";
 import astroD2 from "astro-d2";
-import { unified } from "@astrojs/markdown-remark";
 import { remarkDocLinks } from "./src/plugins/remark-doc-links.ts";
 
 const BASE = "/";
@@ -127,9 +126,7 @@ export default defineConfig({
   ],
   markdown: {
     gfm: true,
-    processor: unified({
-      remarkPlugins: [[remarkDocLinks, { base: BASE }]],
-    }),
+    remarkPlugins: [[remarkDocLinks, { base: BASE }]],
   },
   vite: {
     resolve: {
