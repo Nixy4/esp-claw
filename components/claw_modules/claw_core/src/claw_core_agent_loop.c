@@ -160,10 +160,10 @@ void claw_core_agent_loop_task(void *arg)
                                            llm_unavailable_message,
                                            sizeof(llm_unavailable_message))) {
                 response.view.status = CLAW_CORE_RESPONSE_STATUS_OK;
-                response.view.text = claw_core_dup_string(llm_unavailable_message);
+                response.view.text = claw_utils_string_dup(llm_unavailable_message);
                 if (!response.view.text) {
                     response.view.status = CLAW_CORE_RESPONSE_STATUS_ERROR;
-                    response.view.error_message = claw_core_dup_string("Failed to allocate LLM config message");
+                    response.view.error_message = claw_utils_string_dup("Failed to allocate LLM config message");
                     err = ESP_ERR_NO_MEM;
                 } else {
                     err = ESP_OK;
