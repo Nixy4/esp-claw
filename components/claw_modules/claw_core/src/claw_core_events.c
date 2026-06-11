@@ -302,9 +302,11 @@ void claw_core_publish_stage_tool_calls(const claw_core_request_t *request,
         const char *name = response->tool_calls[i].name ? response->tool_calls[i].name : "?";
         const char *args = response->tool_calls[i].arguments_json;
         if (args && args[0]) {
-            written = snprintf(buf + off, sizeof(buf) - off, "%s%s(%.40s%s)",
-                               i == 0 ? "" : ", ", name, args,
-                               strlen(args) > 40 ? "..." : "");
+            size_t arg_len = strlen(args);
+            size_t prefix_len = utf8_prefix_len(args, 40);
+            written = snprintf(buf + off, sizeof(buf) - off, "%s%s(%.*s%s)",
+                               i == 0 ? "" : ", ", name, (int)prefix_len, args,
+                               arg_len > prefix_len ? "..." : "");
         } else {
             written = snprintf(buf + off, sizeof(buf) - off, "%s%s",
                                i == 0 ? "" : ", ", name);
